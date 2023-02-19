@@ -1,6 +1,7 @@
 import sys
 import os
 import pathlib
+import pyperclip
 
 
 def process(filename: str):
@@ -42,7 +43,10 @@ def process(filename: str):
             
             except Exception as e:
                 print_usage("INVALID FILE CONTENTS")
-
+        
+        with open("out.txt", "r") as f:
+            line = f.readline()
+            pyperclip.copy(line)
 
 def print_usage(err: str):
     msg = f'''{err}
