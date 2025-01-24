@@ -1,79 +1,79 @@
 import sys
 import os
 import pathlib
+import argparse
 import pyperclip
 
 
-def process(filename: str):
+def process(filename: str, file_output=None, clipboard_output=None):
+    with open(filename, mode='r') as input_file:
+        lines = input_file.readlines()
 
-    with open(filename, mode='r') as file:
-        
-        with open('out.txt', mode="w") as wfile:
-            lines = file.readlines()
-            # print(lines)
-            sum = 0
-            try:
-                for line in lines:
-                    
-                    first = line.split(' ')
-                    second = first[1]
-                    first = first[0]
-                    # print(first, int(second))
-                    
-                    start = int(first)
-                    end = start + int(second) - 1
-                    sum += int(second)
-                    end = str(end)
-                    
-                    start = str(start)
-                    n = len(first) - len(start)
-                    start = '0'*n + start
-                    end = '0'*n + end
-                    
-                    if int(second) == 1:
-                        wfile.write(f'{start},')
-                        print(f'{start},', end='')
-                    else:
-                        wfile.write(f'{start}~{end},')
-                        print(f'{start}~{end},', end='')
-                        
-                print()
-                print()
-                print(f'Total: {sum}, {sum*100}')
+    sum = 0
+    try:
+        result = []
+        for line in lines:
+            first = line.split(' ')
+            second = first[1]
+            first = first[0]
             
-            except Exception as e:
-                print_usage("INVALID FILE CONTENTS")
-        
-        with open("out.txt", "r") as f:
-            line = f.readline()
-            pyperclip.copy(line)
+            start = int(first)
+            end = start + int(second) - 1
+            sum += int(second)
+            end = str(end)
 
-def print_usage(err: str):
-    msg = f'''{err}
+            # Padding with leading zeros
+            start = str(start)
+            n = len(first) - len(start)
+            start = '0'*n + start
+            end = '0'*n + end
+            
+            if int(second) == 1:
+                result.append(f'{start}')
+            else:
+                result.append(f'{start}~{end}')
+        result = ','.join(result)
+        print()
+        print(f'Total Bonds: {sum} | Total Amount: {sum*100}')
+        
+    except Exception as e:
+        print_error("INVALID FILE CONTENTS")
     
-Usage:
-        python3 {sys.argv[0]} FILENAME.txt
-    '''
+    if file_output is not None:
+        with open(file_output, "w") as f:
+            f.writelines(result)
+        print(f'Write results to {file_output}.')
+    if clipboard_output:
+        pyperclip.copy(result)
+        print('Coppied to clipboard!')
+
+
+def print_error(err: str):
+    msg = f'''ERROR: {err}'''
     print(msg)
 
 
 def main():
-    if(len(sys.argv) != 2):
-        print_usage('INVALID ARGUMENTS!')
-        return
-    
-    filename = sys.argv[1]
+    parser = argparse.ArgumentParser(description="Process prizebonds.")
+
+    parser.add_argument("-i", "--infile", type=str, required=True, help="Input file to process")
+    parser.add_argument("-o", "--outfile", type=str, required=False, help="Output to a txt file")
+    parser.add_argument("-c", "--clipboard", action="store_true", required=False, help="Output to clipboard")
+
+    args = vars(parser.parse_args())
+    print(args)
+    filename = args['infile']
     
     if filename.split('.')[1] != 'txt':
-        print_usage('INVALID FILETYPE. ".txt" file required.')
+        print_error('INVALID FILETYPE. ".txt" file required.')
         return
     
     path = pathlib.Path(filename)
     if path.is_file():
-        process(filename)
+        process(filename, file_output=args['outfile'], clipboard_output=args['clipboard'])
         
     else:
-        print_usage("NO FILE FOUND OR INVALID FILE.")
+        print_error("NO FILE FOUND OR INVALID FILE.")
     
 
 
